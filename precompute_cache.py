@@ -1,15 +1,4 @@
-"""
-Pre-compute cache of all (N, r, CW) combinations.
 
-The paper (Sec V-A) states: "computing S, P_coll, and D_hol via O(1) lookup
-from a pre-computed cache of 9,216 unique (N, r, CW) combinations."
-
-Grid:
-    N ∈ [1, 512]    → 512 values
-    r ∈ {3, 6, 9}   →   3 values
-    CW ∈ {32, 64, 128, 256, 512, 1024} → 6 values
-    Total = 512 × 3 × 6 = 9,216 entries ✓
-"""
 from __future__ import annotations
 
 import os
