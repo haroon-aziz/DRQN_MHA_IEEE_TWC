@@ -1,0 +1,90 @@
+# =============================================================================
+# DRQN-MHA Default Configuration
+# -----------------------------------------------------------------------------
+# All values match Tables I and IV of the paper:
+#   "Deep Recurrent Q-Network with Multi-Head Attention for Adaptive
+#    Contention Window Optimization in OFDMA-Based Next-Generation WLANs"
+# This config targets the FULL 500,000-step training run as reported in
+# Section V-A (NVIDIA T4 / Google Colab, ~25 min).
+# =============================================================================
+
+# ----- Hardware -----
+device: cuda          # "cuda" on T4 / any CUDA GPU, "cpu" for fallback
+seed: 42              # base seed; one training run per seed (paper uses 5)
+
+# ----- IEEE 802.11ax simulation parameters (Table I) -----
+phy:
+  payload_bits: 8184         # MAC payload
+  phy_header_bits: 128
+  mac_header_bits: 272
+  channel_bit_rate_mbps: 1   # Mb/s
+  slot_time_us: 50           # δ (μs)
+  cw_min: 32
+  cw_max: 1024
+  max_backoff_stages: 5      # m
+  ru_values: [3, 6, 9]       # r ∈ {3, 6, 9}
+  n_sta_min: 1
+  n_sta_max: 512
+  n_drift: 2                 # |ΔN| per step (Sec V-A: "±2 STAs per step")
+
+# ----- State / action / reward (Sec IV-A, IV-B, IV-C) -----
+env:
+  state_dim: 10              # Table II
+  action_space: [32, 64, 128, 256, 512, 1024]   # Sec IV-B
+  sequence_length: 10        # s_{t-9:t}
+  reward_weights:            # Table IX ★ (paper-exact)
+    alpha: 0.70    # throughput gain ΔS
+    beta:  0.10    # normalized HoL delay
+    gamma: 0.15    # collision outcome (0/1)
+    delta: 0.10    # fairness proxy (1 - P_coll)
+    epsilon: 0.05  # CW thrashing penalty
+  ewma_alpha: 0.1            # for P_coll_smooth (index 1)
+  sinr_min: 2.0              # (SINR − 2) / 28
+  sinr_max: 30.0
+  hol_normalize_slots: 500   # D_norm = min(D_hol/500, 1)
+  default_ru: 6              # default r during training (paper Table V uses r=6)
+
+# ----- DRQN-MHA architecture (Table III) -----
+model:
+  state_dim: 10
+  gru_hidden: 128            # GRU encoder units
+  gru_layers: 1
+  num_heads: 4               # Multi-Head Self-Attention heads
+  d_k: 32                    # head dim → d_model = 4 * 32 = 128
+  mha_bias: false            # reproduces 65,536 params exactly
+  shared_hidden: 64          # 128 → 64 ReLU + Dropout(0.1)
+  dropout: 0.1
+  dueling_hidden: 32         # 64 → 32 → {1, 6}
+  n_actions: 6               # |A|
+
+# ----- Training hyperparameters (Table IV) -----
+train:
+  total_steps: 500000        # paper full training length
+  buffer_capacity: 1000000   # 1M transitions
+  batch_size: 64
+  sequence_length: 10        # sampled sequences for GRU
+  gamma: 0.99                # discount
+  lr: 0.0003                 # 3 × 10⁻⁴
+  optimizer: adam
+  epsilon_start: 1.0
+  epsilon_end: 0.01
+  epsilon_decay_steps: 200000
+  target_update_tau: 0.005   # soft update
+  target_update_every: 1000  # steps
+  grad_clip_norm: 10.0
+  huber_loss_delta: 1.0
+  learning_starts: 5000      # collect random experience first
+  train_every: 4             # env steps between optimizer steps
+  checkpoint_every: 25000    # save .pt every 25K steps
+
+# ----- Evaluation -----
+eval:
+  episode_steps: 1000
+  density_classes:           # Table VI ranges
+    - {name: "Very Sparse",     n_min: 1,   n_max: 50}
+    - {name: "Sparse",          n_min: 50,  n_max: 150}
+    - {name: "Moderate",        n_min: 150, n_max: 250}
+    - {name: "Dense",           n_min: 250, n_max: 350}
+    - {name: "Very Dense",      n_min: 350, n_max: 450}
+    - {name: "Extremely Dense", n_min: 450, n_max: 512}
+  n_seeds: 5
