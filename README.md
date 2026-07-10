@@ -64,39 +64,6 @@ and IEEE 802.11ax OFDMA-RA baselines (Wilcoxon signed-rank, p < 0.001).
 
 ---
 
-## 📂 Repository Structure
-
-```
-DRQN_MHA_IEEE_TWC/
-├── configs/
-│   └── default.yaml              # All hyperparameters (Tables I & IV)
-├── env/
-│   ├── __init__.py
-│   ├── markov_chain.py           # Bianchi/Lanante fixed-point solver (Sec III-B)
-│   ├── precompute_cache.py       # 9,216 (N, r, CW) lookup cache (Sec V-A)
-│   └── wlan_env.py               # Gym-style OFDMA environment
-├── model/
-│   ├── __init__.py
-│   ├── components.py             # GRU + MHA + Dueling building blocks
-│   └── drqn_mha.py               # Full DRQN-MHA network (132,199 params)
-├── agent/
-│   ├── __init__.py
-│   ├── replay_buffer.py          # Sequential length-10 replay buffer
-│   └── drqn_agent.py             # Double DQN + ε-greedy + soft target
-├── baselines/
-│   ├── __init__.py
-│   └── beb.py                    # Binary Exponential Backoff baseline
-├── utils/
-│   ├── __init__.py
-│   └── state.py                  # 10-dim state vector builder (Table II)
-├── checkpoints/                  # Saved .pt files (gitignored)
-├── .gitignore
-├── train.py                      # Training entry point
-├── eval.py                       # Per-density evaluation entry point
-└── README.md                     # This file
-```
-
----
 
 ## 🛠 Installation
 
