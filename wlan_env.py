@@ -1,13 +1,4 @@
-"""
-OFDMA WLAN environment wrapping the analytical Markov-chain cache.
 
-Faithful implementation of Section III and Section IV-A/B/C of the paper:
-    * Pre-computed cache of 9,216 (N, r, CW) combinations        (Sec V-A)
-    * N drifts stochastically by ±2 STAs per slot                (Sec V-A)
-    * 10-dimensional state vector                                (Table II)
-    * 6 discrete CW actions                                      (Sec IV-B)
-    * Multi-objective reward with paper-exact weights            (Sec IV-C, Table IX ★)
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -27,36 +18,15 @@ DEFAULT_ACTION_SPACE = (32, 64, 128, 256, 512, 1024)
 @dataclass
 class RewardWeights:
     """Multi-objective reward weights (paper Table IX ★, paper-exact)."""
-    alpha: float = 0.70   # throughput gain ΔS
-    beta: float = 0.10    # normalized HoL delay
-    gamma: float = 0.15   # collision outcome (0/1)
-    delta: float = 0.10   # fairness proxy = 1 − P_coll
-    epsilon: float = 0.05 # CW thrashing penalty
+    alpha: float = 0.70   
+    beta: float = 0.10    
+    gamma: float = 0.15   
+    delta: float = 0.10   
+    epsilon: float = 0.05 
 
 
 class WlanEnv:
-    """OFDMA IEEE 802.11ax environment for CW optimization.
-
-    The environment is a thin wrapper around the pre-computed (N, r, CW) cache.
-    At each step the agent selects a CW action; the environment:
-
-      1. Looks up (τ, p_coll, S, D_hol) for the current (N, r, CW).
-      2. Samples a stochastic collision outcome ~ Bernoulli(p_coll).
-      3. Computes the multi-objective reward R_t (Sec IV-C).
-      4. Updates N by ±2 (Sec V-A) and advances the StateTracker.
-
-    Observation
-    -----------
-    np.ndarray[float32] of shape (10,) — see Table II.
-
-    Action
-    ------
-    int in [0, 5] indexing `DEFAULT_ACTION_SPACE`.
-
-    Reward
-    ------
-    float — R_t = α·ΔS − β·D_norm − γ·collision + δ·fairness − ε·ΔCW_norm.
-    """
+  
 
     metadata = {"render_modes": []}
 
@@ -70,29 +40,7 @@ class WlanEnv:
                  hol_normalize_slots: int = 500,
                  ewma_alpha: float = 0.1,
                  seed: int | None = None) -> None:
-        """Initialize the environment.
 
-        Parameters
-        ----------
-        phy : PhyParams
-            PHY/MAC parameters (Table I).
-        cache_dir : str
-            Directory for the (N, r, CW) pickle cache.
-        reward_weights : RewardWeights, optional
-            Multi-objective weights. Defaults to paper-exact Table IX ★.
-        action_space : tuple[int, ...]
-            Discrete CW values the agent may choose. Default = paper Sec IV-B.
-        default_ru : int
-            Default number of RUs (paper Table V uses r=6).
-        n_drift : int
-            Maximum |ΔN| per step (paper Sec V-A: ±2 STAs).
-        hol_normalize_slots : int
-            D_norm = min(D_hol / hol_normalize_slots, 1).
-        ewma_alpha : float
-            EWMA factor for P_coll_smooth.
-        seed : int, optional
-            RNG seed.
-        """
         self.phy = phy
         self.action_space = tuple(action_space)
         self.n_actions = len(self.action_space)
@@ -126,9 +74,7 @@ class WlanEnv:
         self.prev_S: float = 0.0
         self.t: int = 0
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
+
     def _r_to_idx(self, r: int) -> int:
         if r not in self._r_idx:
             raise ValueError(f"r must be one of {list(self._r_idx)}, got {r}")
@@ -147,9 +93,7 @@ class WlanEnv:
         row = self.lookup[n - 1, r_idx, cw_idx]  # (4,)
         return float(row[0]), float(row[1]), float(row[2]), float(row[3])
 
-    # ------------------------------------------------------------------
-    # Gym-style API
-    # ------------------------------------------------------------------
+    
     def reset(self, n_init: int | None = None,
               r: int | None = None) -> np.ndarray:
         """Reset the environment for a new episode.
@@ -265,11 +209,11 @@ class WlanEnv:
         }
         return state, float(reward), False, info
 
-    # ------------------------------------------------------------------
+
+    def set_n(self, n: int) -> None:
+            # ------------------------------------------------------------------
     # Convenience for evaluation
     # ------------------------------------------------------------------
-    def set_n(self, n: int) -> None:
-        """Force the current STA count (used for per-density evaluation)."""
         self.N = int(np.clip(n, 1, 512))
 
     def set_r(self, r: int) -> None:
