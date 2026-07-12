@@ -1,18 +1,4 @@
-"""
-State vector construction (paper Table II).
 
-Builds the 10-dimensional state s_t at each slot:
-    0  N_est           — estimated STA count / N_max     ∈ [0,1]
-    1  P_coll_smooth   — EWMA of collision outcomes      ∈ [0,1]
-    2  η_prev          — previous-slot throughput        ∈ [0,1]
-    3  H_coll_mean     — mean of last 10 collision flags ∈ [0,1]
-    4  SINR_norm       — (SINR − 2) / 28                 ∈ [0,1]
-    5  Q_len           — normalized queue length         ∈ [0,1]
-    6  T_slot_mod      — (t mod 1000) / 1000             ∈ [0,1]
-    7  CW_{t-1}_norm   — last CW / CW_max                ∈ [0,1]
-    8  CW_{t-2}_norm
-    9  CW_{t-3}_norm
-"""
 from __future__ import annotations
 
 from collections import deque
@@ -23,7 +9,7 @@ import numpy as np
 
 @dataclass
 class StateTracker:
-    """Maintains the rolling statistics needed to build s_t.
+   """Maintains the rolling statistics needed to build s_t.
 
     Attributes
     ----------
@@ -35,7 +21,7 @@ class StateTracker:
         SINR normalization range (Table II: (SINR − 2)/28).
     ewma_alpha : float
         EWMA smoothing factor for P_coll_smooth (index 1).
-    """
+    """ 
     n_max: int = 512
     cw_max: int = 1024
     sinr_min: float = 2.0
@@ -67,35 +53,13 @@ class StateTracker:
                cw: int,
                sinr: float | None = None,
                q_len: float = 0.5) -> np.ndarray:
-        """Advance the tracker by one slot and return the new s_t.
-
-        Parameters
-        ----------
-        n_est : int
-            Estimated STA count for this slot (the env's true N).
-        collision_flag : bool
-            Whether a collision occurred in the slot just observed.
-        eta : float
-            Throughput S observed in the slot just observed.
-        cw : int
-            CW chosen by the agent for the slot just observed.
-        sinr : float | None
-            Optional SINR sample (dB). If None, sampled uniformly in [2, 30].
-        q_len : float
-            Normalized queue length ∈ [0, 1].
-
-        Returns
-        -------
-        np.ndarray[float32] of shape (10,).
-        """
+      
         coll_int = float(bool(collision_flag))
         # EWMA collision update
         self.p_coll_smooth = (
             (1.0 - self.ewma_alpha) * self.p_coll_smooth + self.ewma_alpha * coll_int
         )
-        # Push collision flag to history (after update so H_coll_mean excludes
-        # the just-observed flag, matching "mean of last 10 collision outcomes"
-        # interpreted as the trailing 10-slot window ending at the previous slot)
+      
         self.coll_history.append(coll_int)
         h_coll_mean = float(np.mean(self.coll_history)) if self.coll_history else 0.0
 
