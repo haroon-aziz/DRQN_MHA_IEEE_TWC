@@ -1,17 +1,4 @@
-"""
-Evaluation script: load a trained checkpoint and evaluate per-density.
 
-Reproduces the per-density analysis in Table VI of the paper. Also runs
-the BEB baseline for comparison. Usage:
-
-    python eval.py --checkpoint checkpoints/drqn_mha_seed42_final.pt
-
-    # Evaluate at a specific r value:
-    python eval.py --checkpoint ... --ru 9
-
-    # Evaluate a specific density class:
-    python eval.py --checkpoint ... --density-class Dense
-"""
 from __future__ import annotations
 
 import argparse
