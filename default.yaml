@@ -1,20 +1,10 @@
-# =============================================================================
-# DRQN-MHA Default Configuration
-# -----------------------------------------------------------------------------
-# All values match Tables I and IV of the paper:
-#   "Deep Recurrent Q-Network with Multi-Head Attention for Adaptive
-#    Contention Window Optimization in OFDMA-Based Next-Generation WLANs"
-# This config targets the FULL 500,000-step training run as reported in
-# Section V-A (NVIDIA T4 / Google Colab, ~25 min).
-# =============================================================================
 
-# ----- Hardware -----
-device: cuda          # "cuda" on T4 / any CUDA GPU, "cpu" for fallback
-seed: 42              # base seed; one training run per seed (paper uses 5)
+device: cuda         
+seed: 42              
 
-# ----- IEEE 802.11ax simulation parameters (Table I) -----
+
 phy:
-  payload_bits: 8184         # MAC payload
+  payload_bits: 8184         
   phy_header_bits: 128
   mac_header_bits: 272
   channel_bit_rate_mbps: 1   # Mb/s
