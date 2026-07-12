@@ -1,23 +1,4 @@
-"""
-Main training entry point for DRQN-MHA reproduction.
 
-Implements the full 500,000-step training run described in the paper
-(Sec IV-E & V-A) with a T4 / CUDA GPU. Usage:
-
-    python train.py --config configs/default.yaml --seed 42
-
-    # Quick smoke test (5K steps) to verify the pipeline:
-    python train.py --config configs/default.yaml --seed 42 --steps 5000
-
-Key paper-spec hyperparameters (Tables I & IV):
-    * Adam optimizer, lr = 3 × 10⁻⁴
-    * Discount γ = 0.99, batch = 64, sequence length = 10
-    * Replay buffer capacity = 1,000,000
-    * ε-greedy: 1.0 → 0.01 over 200,000 steps
-    * Soft target update τ = 0.005 every 1,000 steps
-    * Huber loss, gradient clip norm = 10.0
-    * Total training steps: 500,000
-"""
 from __future__ import annotations
 
 import argparse
@@ -31,8 +12,6 @@ import numpy as np
 import torch
 import yaml
 
-# Ensure the package root is on sys.path so absolute imports like
-# `from env.wlan_env import WlanEnv` resolve regardless of cwd.
 PACKAGE_ROOT = Path(__file__).resolve().parent
 if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
@@ -113,24 +92,7 @@ def build_agent(cfg: dict, device: torch.device) -> DRQNAgent:
 
 def train(cfg: dict, seed: int, total_steps: int | None = None,
           checkpoint_dir: str | None = None) -> str:
-    """Run the DRQN-MHA training loop.
-
-    Parameters
-    ----------
-    cfg : dict
-        Parsed YAML config.
-    seed : int
-        RNG seed for this run.
-    total_steps : int, optional
-        Override `cfg["train"]["total_steps"]` (used by --steps CLI flag).
-    checkpoint_dir : str, optional
-        Override checkpoint directory.
-
-    Returns
-    -------
-    str
-        Path to the final checkpoint.
-    """
+  
     # ----- Hardware -----
     device_str = cfg.get("device", "cuda")
     if device_str == "cuda" and not torch.cuda.is_available():
