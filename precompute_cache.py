@@ -14,26 +14,8 @@ CACHE_VERSION = 1
 
 
 def build_cache(phy: PhyParams) -> dict:
-    """Build the 9,216-entry (N, r, CW) lookup cache.
-
-    Parameters
-    ----------
-    phy : PhyParams
-        PHY/MAC parameters from Table I.
-
-    Returns
-    -------
-    dict with keys:
-        - "N"     : np.ndarray[int32]   shape (9216,)
-        - "r"     : np.ndarray[int32]   shape (9216,)
-        - "CW"    : np.ndarray[int32]   shape (9216,)
-        - "tau"   : np.ndarray[float32] shape (9216,)
-        - "pcoll" : np.ndarray[float32] shape (9216,)
-        - "S"     : np.ndarray[float32] shape (9216,)
-        - "Dhol"  : np.ndarray[float32] shape (9216,)
-        - "version": int
-    """
-    n_values = np.arange(1, 513, dtype=np.int32)        # 1..512
+"
+    n_values = np.arange(1, 513, dtype=np.int32)        
     r_values = np.array([3, 6, 9], dtype=np.int32)
     cw_values = np.array([32, 64, 128, 256, 512, 1024], dtype=np.int32)
 
@@ -111,15 +93,7 @@ def load_or_build_cache(cache_dir: str | os.PathLike,
 
 
 def build_lookup_table(cache: dict) -> np.ndarray:
-    """Return a 3D lookup array indexed by [N-1, r_idx, cw_idx].
-
-    Returns
-    -------
-    np.ndarray[float32] of shape (512, 3, 6, 4)
-        Last axis = [tau, p_coll, S, D_hol].
-        r_idx: 0→r=3, 1→r=6, 2→r=9.
-        cw_idx: 0→CW=32, 1→64, 2→128, 3→256, 4→512, 5→1024.
-    """
+   
     table = np.zeros((512, 3, 6, 4), dtype=np.float32)
     r_map = {3: 0, 6: 1, 9: 2}
     cw_map = {32: 0, 64: 1, 128: 2, 256: 3, 512: 4, 1024: 5}
